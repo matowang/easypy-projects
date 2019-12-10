@@ -29,23 +29,24 @@ def handle_keys():
         led1.toggle()
     if b_key.value() == 0 and bpm < 200:
         bpm += 1
-        times_to_count = get_bpm_to_ms_count()
+        times_to_count = 1000
         led1.toggle()
 
-def handle_minus_key():
+def handle_minus_key(t):
     global bpm
     global times_to_count
+    print("Print")
     if bpm > 40:
         bpm -= 1
-        times_to_count = get_bpm_to_ms_count()
+        #times_to_count = 1000
         led2.toggle()
 
-def handle_add_key():
+def handle_add_key(t):
     global bpm
     global times_to_count
     if bpm < 200:
         bpm += 1
-        times_to_count = get_bpm_to_ms_count()
+        #times_to_count = int((6000.0/bpm))
         led2.toggle()
 
 def beat():
@@ -78,7 +79,7 @@ print("times to count", times_to_count)
 
 timer = Timer(1, mode=Timer.PERIODIC)
 timer_a = timer.channel(Timer.CH_0, freq=1000)
-timer_a.irq(trigger=Timer.TIMEOUT, handler=handle_timer)
+#timer_a.irq(trigger=Timer.TIMEOUT, handler=handle_timer)
 
 a_key.irq(PIN.IRQ_FALLING, handle_minus_key)
 b_key.irq(PIN.IRQ_FALLING, handle_add_key)
