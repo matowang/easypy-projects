@@ -4,82 +4,89 @@ import utime
 buzzer = Music()
 a_key = KEY(0)
 b_key = KEY(1)
+c_key = KEY(2)
+d_key = KEY(3)
 
 bpm = 60
+
+MIN_BPM = 60
+MAX_BPM = 200
 
 led1 = LED(1)
 led2 = LED(2)
 led3 = LED(3)
 
 def get_bpm_to_ms_count():
-    return int(60000/bpm)
+    return int(60000.0/bpm)
 
-times_to_count = get_bpm_to_ms_count()
-ms_count = times_to_count
+cur_time = 0
 
-times_to_beat_count = 4;
-beat_count = times_to_beat_count
+beats_per_tick = 4
+beat_count = beats_per_tick
 
-def handle_keys():
-    global bpm
-    global times_to_count
-    if a_key.value() == 0 and bpm > 40:
-        bpm -= 1
-        times_to_count = get_bpm_to_ms_count()
-        led1.toggle()
-    if b_key.value() == 0 and bpm < 200:
-        bpm += 1
-        times_to_count = 1000
-        led1.toggle()
+def decrease_beat_count(t):
+    led2.toggle()
+    global beats_per_tick
+    global beat_count
+    if beats_per_tick > 0:
+        beats_per_tick -= 1
+        beat_count -= 1
 
-def handle_minus_key(t):
-    global bpm
-    global times_to_count
-    print("Print")
-    if bpm > 40:
-        bpm -= 1
-        #times_to_count = 1000
-        led2.toggle()
+def increase_beat_count(t):
+    led2.toggle()
+    global beats_per_tick
+    global beat_count
+    beats_per_tick += 1
+    beat_count += 1
 
-def handle_add_key(t):
-    global bpm
-    global times_to_count
-    if bpm < 200:
-        bpm += 1
-        #times_to_count = int((6000.0/bpm))
-        led2.toggle()
+c_key.irq(trigger=PIN.IRQ_FALLING, handler=decrease_beat_count)
+d_key.irq(trigger=PIN.IRQ_FALLING, handler=increase_beat_count)
 
-def beat():
+times_to_ms_count = get_bpm_to_ms_count()
+next_beat_time = cur_time + times_to_ms_count
+
+beats_to_add = 0;
+
+def decrease_beat(t):
+    global beats_to_add
+    if bpm > MIN_BPM:
+        beats_to_add -= 1
+def increase_beat(t):
+    global beats_to_add
+    if bpm < MAX_BPM:
+        beats_to_add += 1
+
+a_key.irq(trigger=PIN.IRQ_FALLING, handler=decrease_beat)
+b_key.irq(trigger=PIN.IRQ_FALLING, handler=increase_beat)
+
+def tick():
     global beat_count
     beat_count -= 1
-    if beat_count == 0:
+    if beat_count <= 0:
         led1.toggle()
         led3.off()
-        #buzzer.play('D')
-        beat_count = times_to_beat_count
+        buzzer.pitch(440, 50, 0)
+        beat_count = beats_per_tick
     else:
         led3.toggle()
         led1.off()
-        #buzzer.play('C')
-
-def flash_led(led):
-    led.on()
-    utime.sleep_ms(10)
-    led.off()
+        buzzer.pitch(262, 50, 0)
 
 def handle_timer(t):
-    global ms_count
-    ms_count -= 1
-    if(ms_count == 0):
-        beat()
-        ms_count = times_to_count
-
-print("BPM:", bpm)
-print("times to count", times_to_count)
+    global cur_time
+    cur_time += 1
 
 timer = Timer(1, mode=Timer.PERIODIC)
 timer_a = timer.channel(Timer.CH_0, freq=1000)
-#timer_a.irq(trigger=Timer.TIMEOUT, handler=handle_timer)
+timer_a.irq(trigger=Timer.TIMEOUT, handler=handle_timer)
 
-a_key.irq(PIN.IRQ_FALLING, handle_minus_key)
-b_key.irq(PIN.IRQ_FALLING, handle_add_key)
+print("BPM:", bpm)
+print("times to count", times_to_ms_count)
+
+while(True):
+    bpm += beats_to_add
+    times_to_ms_count = 60000.0/bpm
+    beats_to_add = 0
+    if next_beat_time <= cur_time:
+        tick()
+        next_beat_time += times_to_ms_count
