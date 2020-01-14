@@ -1,16 +1,19 @@
 from machine import KEY, Music, PIN, Timer, LED
 import utime
 
+bpm = 60
+
+MIN_BPM = 60
+MAX_BPM = 200
+
+beats_per_ticks = [0,2,3,4,6]
+bpt_pointer = 1
+
 buzzer = Music()
 a_key = KEY(0)
 b_key = KEY(1)
 c_key = KEY(2)
 d_key = KEY(3)
-
-bpm = 60
-
-MIN_BPM = 60
-MAX_BPM = 200
 
 led1 = LED(1)
 led2 = LED(2)
@@ -22,22 +25,23 @@ def get_bpm_to_ms_count():
 cur_time = 0
 
 beats_per_tick = 4
-beat_count = beats_per_tick
+beat_count = beats_per_ticks[bpt_pointer]
 
 def decrease_beat_count(t):
     led2.toggle()
-    global beats_per_tick
+    global bpt_pointer
     global beat_count
-    if beats_per_tick > 0:
-        beats_per_tick -= 1
+    if bpt_pointer > 0:
+        bpt_pointer -= 1
         beat_count -= 1
 
 def increase_beat_count(t):
     led2.toggle()
-    global beats_per_tick
+    global bpt_pointer
     global beat_count
-    beats_per_tick += 1
-    beat_count += 1
+    if(bpt_pointer < beats_per_ticks.len()-1)
+        bpt_pointer += 1
+        beat_count += 1
 
 c_key.irq(trigger=PIN.IRQ_FALLING, handler=decrease_beat_count)
 d_key.irq(trigger=PIN.IRQ_FALLING, handler=increase_beat_count)
@@ -66,7 +70,7 @@ def tick():
         led1.toggle()
         led3.off()
         buzzer.pitch(440, 50, 0)
-        beat_count = beats_per_tick
+        beat_count = beats_per_ticks[bpt_pointer]
     else:
         led3.toggle()
         led1.off()

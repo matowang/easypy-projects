@@ -25,12 +25,12 @@ class SevenSeg:
         else:
             self.off_value = 1
             self.on_value = 0
-    
+
         init_value = self.off_value
 
-        self.PINS = [A,B,C,D,E,F,G]
+        self.PINS = [A,B,C,D,E,F,G,DP]
 
-        for i in range(7):
+        for i in range(len(self.PINS)):
             print(i)
             self.PINS[i] = PIN('P{}'.format(self.PINS[i]))
             self.PINS[i].init(mode=PIN.OUT, value=init_value)
@@ -55,3 +55,9 @@ class SevenSeg:
         code = SevenSeg.str_encoding[str(s)]
         print(*code)
         self.light_segs(*code)
+
+    def dot_on(self):
+        self.PINS[7].value(self.on_value)
+
+    def dot_off(self):
+        self.PINS[7].value(self.off_value)
